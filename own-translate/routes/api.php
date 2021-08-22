@@ -17,3 +17,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::post('/translate',[\App\Http\Controllers\TranslateController::class,'translate']);
+Route::post('/translate2',[\App\Http\Controllers\TranslateController::class,'translate2']);
+
+Route::get('/language',[\App\Http\Controllers\TranslateController::class,'language']);

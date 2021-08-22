@@ -3,7 +3,11 @@
 
 use Google\Cloud\Translate\V2\TranslateClient;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Session;
 use Stichoza\GoogleTranslate\GoogleTranslate;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -29,3 +33,15 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/cache', function () {
+    $cacheData = Redis::keys('dataArray:*');
+    dd(Redis::keys('*'));
+    return Response::json($cacheData);
+});
+
+Route::get('/session', function () {
+    $SsAll = Session::all();
+    return $SsAll;
+});
+
+Route::get('/translate',[\App\Http\Controllers\TranslateController::class,'translatePage'])->name('translate');
