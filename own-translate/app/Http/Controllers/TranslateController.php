@@ -20,8 +20,7 @@ class TranslateController extends Controller
     public function translate(Request $request){
         $targetLang = null;
         $validator = Validator::make($request->all(), [
-            'targetLanguage' => 'required',
-            'text' => 'required|string|min:1',
+            'targetText' => 'required|string|min:1',
             'resultLanguage' => 'required|string'
         ]);
 
@@ -31,7 +30,7 @@ class TranslateController extends Controller
                 'errors' => $validator->errors()
             ]);
 
-            return Response::json($validator->errors());
+            return Response::json($validator->errors(),400);
         }
 
         if($request->targetLanguage == $request->resultLanguage){
@@ -39,13 +38,13 @@ class TranslateController extends Controller
 
             $response = ["message"=>"Aynı dilde çeviri yapılamaz"];
 
-            return Response::json($response);
+            return Response::json($response,400);
         }
 
         if($request->targetLanguage != 0){
             $targetLang = $request->targetLanguage;
         }
-        $text = $request->text;
+        $text = $request->targetText;
         $resultLang = $request->resultLanguage;
 
         $sourceTextArray = $targetLang.":".$text.":".$resultLang;
@@ -54,7 +53,12 @@ class TranslateController extends Controller
 
             $dataArray = Redis::get($sourceTextArray);
 
-            $response = ["resultText" => $dataArray];
+            $response = [
+                "targetText" => $text,
+                "targetLanguage" => $targetLang,
+                "resultText" => $dataArray,
+                "resultLanguage" => $resultLang
+            ];
 
             return Response::json($response);
 
@@ -77,10 +81,10 @@ class TranslateController extends Controller
 
             $response = ["message"=>"Çeviri Yapılamadı!"];
 
-            return Response::json($response);
+            return Response::json($response,400);
         }
 
-        $targetLang = ($targetLang) ? $targetLang: $resultText['source'];
+        $targetLang = $resultText['source'];
 
         $resultTxt = $resultText["text"];
 
@@ -88,7 +92,12 @@ class TranslateController extends Controller
 
         Redis::set($sourceTextArray,$resultTxt);
 
-        $response = ["resultText" => $resultTxt];
+        $response = [
+            "targetText" => $text,
+            "targetLanguage" => $targetLang,
+            "resultText" => $resultTxt,
+            "resultLanguage" => $resultLang
+        ];
 
         return Response::json($response);
 
@@ -96,66 +105,7 @@ class TranslateController extends Controller
 
     }
 
-    public function translate2(Request $request){
 
-        $translate = new TranslateClient(['key'=>'AIzaSyAwbHYRc1LF8flQ3CfvL5RHhcvGTswXZa0']);
-
-        $validator = Validator::make($request->all(), [
-            'text' => 'required|string|min:1',
-            'targetLanguage' => 'required|string'
-        ]);
-
-        if ( $validator->fails() ) {
-            Log::error('API request validation failed.', [
-                'request' => $request->all(),
-                'errors' => $validator->errors()
-            ]);
-
-            return Response::json($validator->errors());
-        }
-
-        $text = $request->text;
-        $resultLang = $request->targetLanguage;
-
-        $trOption = [
-            "target" => $resultLang
-        ];
-
-        $resultText = $translate->translate($text,$trOption);
-        $targetLang = $resultText['source'];
-
-        $resultTxt = $resultText["text"];
-
-        $translateArray = [
-            "targetText" => $text,
-            "targetLang" => $targetLang,
-            "resultLang" => $resultLang,
-            "resultText" => $resultTxt
-        ];
-
-        $keyArray = [
-            "targetText" => $text,
-            "resultLang" => $resultLang
-        ];
-
-        $keyText = $targetLang.":".$text.":".$resultLang;
-
-        $resultArray = [
-            "resultText" => $resultTxt
-        ];
-
-        if(Session::has($keyArray)){
-            return Response::json($resultArray);
-        }
-
-        Session::put($keyText,$translateArray);
-
-//        print_r(Session::all());
-
-
-        return Response::json($resultArray);
-
-    }
 
 
     public function language(){
