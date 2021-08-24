@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Google\Cloud\Translate\V2\TranslateClient;
+use GrahamCampbell\Throttle\Facades\Throttle;
 use GuzzleHttp\Cookie\SessionCookieJar;
 use GuzzleHttp\Cookie\SetCookie;
 use http\Cookie;
@@ -19,6 +20,7 @@ class TranslateController extends Controller
 
     public function translate(Request $request){
         $targetLang = null;
+
         $validator = Validator::make($request->all(), [
             'targetText' => 'required|string|min:1',
             'resultLanguage' => 'required|string'
@@ -42,9 +44,13 @@ class TranslateController extends Controller
         }
 
         if($request->targetLanguage != 0){
+
             $targetLang = $request->targetLanguage;
+
         }
+
         $text = $request->targetText;
+
         $resultLang = $request->resultLanguage;
 
         $sourceTextArray = $targetLang.":".$text.":".$resultLang;
@@ -96,25 +102,19 @@ class TranslateController extends Controller
             "targetText" => $text,
             "targetLanguage" => $targetLang,
             "resultText" => $resultTxt,
-            "resultLanguage" => $resultLang
+            "resultLanguage" => $resultLang,
+            "source" => $resultText
         ];
 
         return Response::json($response);
 
-
-
     }
-
-
-
 
     public function language(){
 
         $translate = new TranslateClient(['key'=>'AIzaSyAwbHYRc1LF8flQ3CfvL5RHhcvGTswXZa0']);
 
         return Response::json($translate->localizedLanguages());
-
-
 
     }
 
